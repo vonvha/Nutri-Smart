@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { NutritionProfile } from '../models/nutrition'; // We will create this model
+import { NutritionProfile, Meal, HistoryDay, FoodItem, Notification, Appointment } from '../models/nutrition';
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:8000/api/v1',
@@ -8,7 +8,6 @@ const apiClient = axios.create({
   },
 });
 
-// We can add an interceptor to add the auth token to every request
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
   if (token) {
@@ -24,9 +23,7 @@ export const login = async (email: string, password: string) => {
   formData.append('password', password);
 
   const response = await apiClient.post('/auth/login', formData, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   });
 
   if (response.data.access_token) {
@@ -45,9 +42,7 @@ export const register = async (name: string, email: string, password: string) =>
 export const logout = () => {
   localStorage.removeItem('authToken');
   localStorage.removeItem('user');
-  // Here you might want to call a /auth/logout endpoint if the backend supports it
 };
-
 
 // --- Profile ---
 export const getProfile = async (): Promise<NutritionProfile> => {
@@ -84,6 +79,12 @@ export const getRecentFoods = async () => {
   return response.data;
 }
 
+// NUEVA FUNCIÓN: Buscar en la base de datos global
+export const searchFoodsInDb = async (query: string) => {
+  const response = await apiClient.get(`/food/search?q=${encodeURIComponent(query)}`);
+  return response.data;
+}
+
 export const logFood = async (foodName: string, calories?: number) => {
   const payload: any = { food_name: foodName };
   if (calories) {
@@ -97,13 +98,9 @@ export const logFood = async (foodName: string, calories?: number) => {
 export const analyzeImage = async (file: File) => {
   const formData = new FormData();
   formData.append('file', file);
-
   const response = await apiClient.post('/vision/analyze-food', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
-  return response.data;
   return response.data;
 };
 
