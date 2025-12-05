@@ -1,43 +1,75 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Depends
 from typing import List
 from pydantic import BaseModel
 from models.nutrition import FoodItem
+# AQUI ESTABA EL ERROR: Faltaba importar profiles_collection
+from config.database import foods_collection, ingestions_collection, daily_records_collection, profiles_collection
+from dependencies import get_current_user_email
+from datetime import datetime
 
 router = APIRouter()
 
-from services.mock_db import MOCK_RECENT_FOODS, MOCK_DASHBOARD_DATA
-
 @router.get("/recent", response_model=List[FoodItem])
-async def get_recent_foods():
-    """
-    Get the user's recently logged food items.
-    """
-    return MOCK_RECENT_FOODS
+async def get_recent_foods(user_email: str = Depends(get_current_user_email)):
+    cursor = ingestions_collection.find({"user_email": user_email}).sort("date", -1).limit(10)
+    recent_foods = []
+    
+    for ing in cursor:
+        recent_foods.append(FoodItem(
+            id=ing.get("food_id", 0),
+            name=ing["food_name"],
+            detail=f"1 porción • {ing['calories']} Kcal"
+        ))
+    
+    if not recent_foods:
+        cursor_foods = foods_collection.find().limit(5)
+        for food in cursor_foods:
+            recent_foods.append(FoodItem(id=food["id"], name=food["name"], detail=food["detail"]))
+            
+    return recent_foods
 
 class LogFoodRequest(BaseModel):
     food_name: str
     calories: int = 300
 
 @router.post("/log", response_model=FoodItem)
-async def log_food(request: LogFoodRequest):
-    """
-    Logs a new food item.
-    """
-    new_id = max(food["id"] for food in MOCK_RECENT_FOODS) + 1 if MOCK_RECENT_FOODS else 1
+async def log_food(request: LogFoodRequest, user_email: str = Depends(get_current_user_email)):
+    food_in_db = foods_collection.find_one({"name": request.food_name})
+    food_id = food_in_db["id"] if food_in_db else 9999
     
-    # Use provided calories or default
-    estimated_calories = request.calories
+    # 1. Registrar Ingesta
+    ingestion = {
+        "user_email": user_email,
+        "food_id": food_id,
+        "food_name": request.food_name,
+        "calories": request.calories,
+        "date": datetime.now()
+    }
+    ingestions_collection.insert_one(ingestion)
     
-    new_food = FoodItem(id=new_id, name=request.food_name, detail=f"1 porción • {estimated_calories} Kcal")
+    # 2. Actualizar registro diario (daily_records)
+    # Usamos formato ISO (YYYY-MM-DD) para evitar problemas de idioma (dic vs Dec)
+    today_str = datetime.now().date().isoformat()
     
-    # Add to the top of the list
-    MOCK_RECENT_FOODS.insert(0, new_food.dict())
+    daily = daily_records_collection.find_one({"user_email": user_email, "date": today_str})
+    
+    if daily:
+        new_calories = daily["calories"] + request.calories
+        daily_records_collection.update_one(
+            {"_id": daily["_id"]},
+            {"$set": {"calories": new_calories}}
+        )
+    else:
+        # Aquí era donde fallaba antes por falta del import
+        profile = profiles_collection.find_one({"user_email": user_email})
+        target = profile.get("caloriesTarget", 1800) if profile else 1800
         
-    MOCK_DASHBOARD_DATA["caloriesConsumed"] += estimated_calories
+        daily_records_collection.insert_one({
+            "user_email": user_email,
+            "date": today_str,
+            "calories": request.calories,
+            "target": target,
+            "status": "inprogress"
+        })
     
-    # Update macros (mock logic)
-    MOCK_DASHBOARD_DATA["macros"]["protein"]["current"] += 20
-    MOCK_DASHBOARD_DATA["macros"]["carbs"]["current"] += 30
-    MOCK_DASHBOARD_DATA["macros"]["fat"]["current"] += 10
-    
-    return new_food
+    return FoodItem(id=food_id, name=request.food_name, detail=f"1 porción • {request.calories} Kcal")

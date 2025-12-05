@@ -40,3 +40,21 @@
 
 ## Quick Start (Windows)
 You can run the `start_all.bat` script to open both servers in new terminal windows automatically.
+
+## Carga de base de datos
+Tener instalado MongoDB, crear la base de datos "nutrismart" y también crear las colecciones:
+- consultations  
+- daily_records  
+- foods  
+- ingestions  
+- notifications  
+- profiles  
+- users
+
+Ejecutar el script seed_db.py estando en el folder back desde la terminal.
+```bash
+   cd back
+   ```
+```bash
+   python seed_db.py
+   ```

@@ -1,21 +1,20 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from typing import List
 from models.nutrition import HistoryDay
+from config.database import daily_records_collection
+from dependencies import get_current_user_email
 
 router = APIRouter()
 
-# Mock data from the frontend
-MOCK_HISTORY = [
-  { "date": "Hoy", "calories": 1200, "target": 1800, "status": "inprogress" },
-  { "date": "Ayer", "calories": 1750, "target": 1800, "status": "success" },
-  { "date": "20 Nov", "calories": 2100, "target": 1800, "status": "warning" },
-  { "date": "19 Nov", "calories": 1800, "target": 1800, "status": "success" },
-  { "date": "18 Nov", "calories": 1650, "target": 1800, "status": "success" },
-]
-
 @router.get("/", response_model=List[HistoryDay])
-async def get_history():
-    """
-    Get the consumption history for the current user.
-    """
-    return MOCK_HISTORY
+async def get_history(user_email: str = Depends(get_current_user_email)):
+    cursor = daily_records_collection.find({"user_email": user_email}).sort("date", -1).limit(7)
+    history = []
+    for day in cursor:
+        history.append(HistoryDay(
+            date=day["date"], # Ahora será YYYY-MM-DD, que es ordenable
+            calories=day["calories"],
+            target=day["target"],
+            status=day["status"]
+        ))
+    return history

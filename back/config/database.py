@@ -4,19 +4,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MONGO_URI = os.getenv("MONGO_URI")
-DB_NAME = os.getenv("DB_NAME")
+# Asegúrate de que tu .env tenga MONGO_URI="mongodb://localhost:27017/" y DB_NAME="nutrismart"
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
+DB_NAME = os.getenv("DB_NAME", "nutrismart")
 
 client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 
-def get_db():
-    """
-    Función para obtener la instancia de la base de datos.
-    Actualmente está configurada pero no se usa activamente hasta
-    que se reemplace la lógica mock.
-    """
-    return db
+# Colecciones mapeadas según tu imagen y requerimientos
+users_collection = db["users"]
+profiles_collection = db["profiles"]
+foods_collection = db["foods"]
+ingestions_collection = db["ingestions"]
+daily_records_collection = db["daily_records"]
+consultations_collection = db["consultations"] # Usado para Citas/Appointments
+notifications_collection = db["notifications"] # Agregamos esta para notificaciones
 
-# Ejemplo de cómo obtener una colección
-# user_collection = db["users"]
+def get_db():
+    return db

@@ -23,7 +23,7 @@ class HistoryDay(BaseModel):
     status: str
 
 class FoodItem(BaseModel):
-    id: int
+    id: int # Mantuvimos IDs numéricos en el seed para compatibilidad
     name: str
     detail: str
 
