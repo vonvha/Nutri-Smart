@@ -29,6 +29,7 @@ class FoodItem(BaseModel):
 
 class FoodAnalysis(BaseModel):
     is_food: bool
+    food_name: Optional[str] = None
     calories: Optional[int] = None
     protein: Optional[int] = None
     fat: Optional[int] = None

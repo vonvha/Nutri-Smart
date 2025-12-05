@@ -45,10 +45,10 @@ def analyze_image_nutrition(image_bytes: bytes):
 
         prompt_parts = [
           "Analiza la siguiente imagen. Determina si contiene comida.",
-          "Si es comida, responde únicamente con un objeto JSON con las siguientes claves y valores numéricos estimados: 'calories', 'protein', 'fat'.",
+          "Si es comida, responde únicamente con un objeto JSON con las siguientes claves: 'food_name' (nombre del alimento en español), 'calories' (numérico), 'protein' (numérico), 'fat' (numérico).",
           "Si no es comida, responde únicamente con un objeto JSON con la clave 'message' y el valor 'La imagen no parece ser comida.'.",
           "No incluyas ninguna otra explicación o texto fuera del objeto JSON.",
-          "Ejemplo si es comida: {\"calories\": 350, \"protein\": 25, \"fat\": 15}",
+          "Ejemplo si es comida: {\"food_name\": \"Manzana\", \"calories\": 52, \"protein\": 0.3, \"fat\": 0.2}",
           "Ejemplo si no es comida: {\"message\": \"La imagen no parece ser comida.\"}",
           "\n",
           image,
@@ -66,6 +66,7 @@ def analyze_image_nutrition(image_bytes: bytes):
         
         return {
             "is_food": True,
+            "food_name": data.get("food_name", "Comida escaneada"),
             "calories": data.get("calories"),
             "protein": data.get("protein"),
             "fat": data.get("fat")
