@@ -32,7 +32,6 @@ export interface FoodItem {
 
 export interface FoodAnalysis {
   is_food: boolean;
-  name?: string;
   calories?: number;
   protein?: number;
   fat?: number;

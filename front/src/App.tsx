@@ -540,12 +540,12 @@ const SpeedLoggerScreen = ({ onBack, onAdd, recentFoods, favoriteFoods, onToggle
               <Card className="mt-6 w-full text-left">
                 {analysisResult.is_food ? (
                   <div>
-                    <h4 className="font-bold text-lg mb-2">{analysisResult.name || 'Comida detectada'}</h4>
+                    <h4 className="font-bold text-lg mb-2">Análisis Nutricional</h4>
                     <p><strong>Calorías:</strong> {analysisResult.calories ?? 'N/A'} kcal</p>
                     <p><strong>Proteínas:</strong> {analysisResult.protein ?? 'N/A'} g</p>
                     <p><strong>Grasas:</strong> {analysisResult.fat ?? 'N/A'} g</p>
                     <ButtonPrimary
-                      onClick={() => onAdd(analysisResult.name || "Comida escaneada", analysisResult.calories)}
+                      onClick={() => onAdd("Comida escaneada", analysisResult.calories)}
                       className="mt-4"
                     >
                       Registrar (+{analysisResult.calories ?? 300} kcal)
