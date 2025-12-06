@@ -26,6 +26,7 @@ async def analyze_food_image(file: UploadFile = File(...)):
     return FoodAnalysis(
         is_food=True,
         name=analysis_result.get("name"),
+        food_name=analysis_result.get("food_name"),
         calories=analysis_result.get("calories"),
         protein=analysis_result.get("protein"),
         fat=analysis_result.get("fat")
